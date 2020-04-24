@@ -23,18 +23,27 @@ class Schoology:
         self.secret = schoology_auth.consumer_secret
         self.schoology_auth = schoology_auth
 
-    def _get(self, path):
+    def _get(self, path, params = dict({})):
         """
         GET data from a given endpoint.
 
         :param path: Path (following API root) to endpoint.
         :return: JSON response.
         """
-        try:
-            response = self.schoology_auth.oauth.get(url='%s%s?limit=%s&start=%s' % (self._ROOT, path, self.limit, self.start), headers=self.schoology_auth._request_header(), auth=self.schoology_auth.oauth.auth)
+        request_url = '%s%s?limit=%s&start=%s' % (self._ROOT, path, self.limit, self.start)
+        for key in params.keys():
+                if not params[key] is None:
+                    request_url += '&%s=%s' % (key, params[key])
+        
+       # try:
+        response = self.schoology_auth.oauth.get(url=request_url, headers=self.schoology_auth._request_header(), auth=self.schoology_auth.oauth.auth)
+        if response.status_code < 300:
             return response.json()
-        except JSONDecodeError:
-            return {}
+        else:
+            raise SchoologyError(response.content.decode('utf-8'))
+     #   except JSONDecodeError:
+     #       return response
+            #return {}
 
     def _post(self, path, data):
         """
@@ -76,7 +85,8 @@ class Schoology:
 
         :return: List of school objects of which a user is aware.
         """
-        return [School(raw) for raw in self._get('schools')['school']]
+        return self._get('schools')
+     #   return [School(raw) for raw in self._get('schools')['school']]
 
     def get_school(self, school_id):
         """
@@ -84,7 +94,8 @@ class Schoology:
 
         :return: School object with data on the requested school.
         """
-        return School(self._get('schools/%s' % school_id))
+        return self._get('schools/%s' % school_id)
+       # return School(self._get('schools/%s' % school_id))
 
     def create_school(self, school):
         """
@@ -113,7 +124,8 @@ class Schoology:
         :param school_id: ID of school whose buildings to get.
         :return: List of building objects in that school.
         """
-        return [Building(raw) for raw in self._get('schools/%s/buildings' % school_id)]
+        return  self._get('schools/%s/buildings' % school_id)
+       # return [Building(raw) for raw in self._get('schools/%s/buildings' % school_id)]
 
     # There is currently no endpoint for getting data on individual buildings.
     # This is due in part to the oft-blurred line Schoology draws between schools and buildings.
@@ -143,14 +155,29 @@ class Schoology:
         """
         return User(self._get('users/me'))
 
-    def get_users(self, inactive=False):
+    def get_users(self, building_id = None, role_ids = None, parent_access_codes = None, school_uids = None):
+        """
+        Get active Schoology users
+
+        :param building_id: Only return users for the given building.
+        :param role_ids: (Comma-separated list of IDs) Only return users who    belong to the given role IDs
+        :param parent_access_codes: Add in parent access codes for each of the returned users (set to 1)
+        :param school_uids: A comma-separated list of school_uids within the school (up to 50 at one time)
+        :return: list of Active User Objects
+
+        """
+        return self._get('users', params = dict({"building_id": building_id, "role_ids": role_ids, "parent_access_codes": parent_access_codes, "school_uids": school_uids}))
+
+
+
+    def get_inactive_users(self):
         """
         Get data on all users.
 
-        :param inactive: Gets inactive users instead of normal ones.
-        :return: List of User objects.
+        :return: List of Inactive User objects.
         """
-        return [User(raw) for raw in self._get('users' + ('/inactive' if inactive else ''))['user']]
+        return self._get('users/inactive')
+      #  return [User(raw) for raw in self._get('users/inactive'))['user']]
 
     def get_user(self, user_id, inactive=False):
         """
@@ -238,7 +265,8 @@ class Schoology:
 
         :return: List of Course objects.
         """
-        return [Course(raw) for raw in self._get('courses')['course']]
+        return self._get('courses')
+     #   return [Course(raw) for raw in self._get('courses')['course']]
 
     def get_course(self, course_id):
         """
@@ -249,13 +277,14 @@ class Schoology:
         """
         return Course(self._get('courses/%s' % course_id))
 
-    def get_sections(self):
+    def get_sections(self, course_id, include_past = None):
         """
         Get data on all sections.
 
         :return: List of Section objects.
         """
-        return [Section(raw) for raw in self._get('sections')['section']]
+        return self._get('courses/%s/sections' % course_id, params = dict({'include_past':include_past}))
+       # return [Section(raw) for raw in self._get('sections')['section']]
 
     def get_section(self, section_id):
         """
@@ -1932,7 +1961,8 @@ class Schoology:
     # TODO: Implement get_grading_periods and get_grading_period
 
     def get_roles(self):
-        return [Role(raw) for raw in self._get('roles')['role']]
+        return self._get('roles')
+        #return [Role(raw) for raw in self._get('roles')['role']]
 
     def get_role(self, role_id):
         return Role(self._get('roles/%s' % role_id))

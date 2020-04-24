@@ -53,3 +53,9 @@ class NoDifferenceError(Exception):
     and makes it easier to tell what went wrong.
     """
     pass
+
+class SchoologyError(Exception):
+    """
+    This exception represents a generic Schoology error.
+    """
+    pass
