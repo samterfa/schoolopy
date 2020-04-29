@@ -89,3 +89,5 @@ ENV/
 .ropeproject
 
 *.yml
+.DS_Store
+.spyproject*

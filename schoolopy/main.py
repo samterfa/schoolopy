@@ -129,6 +129,15 @@ class Schoology:
 
     # There is currently no endpoint for getting data on individual buildings.
     # This is due in part to the oft-blurred line Schoology draws between schools and buildings.
+    
+    def get_building(self, building_id):
+        """
+        Get data on a building.
+
+        :return: Building object with data on the requested building.
+        """
+        return self._get('schools/%s' % building_id)
+       # return School(self._get('schools/%s' % school_id))
 
     def create_building(self, school_id, building):
         """
