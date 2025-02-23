@@ -2222,7 +2222,7 @@ class Schoology:
         """
         return self._search(keywords, 'course')
 
-    def csvexport_users(self, fields):
+    def csvexport_users(self, fields=[]):
         """
         Export a CSV of user data.
 
