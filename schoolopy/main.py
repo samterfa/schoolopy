@@ -24,21 +24,22 @@ class Schoology:
         self.schoology_auth = schoology_auth
         self.api_host = api_host
 
-    def _get_params_string(self, params):
+    def _get_params_string(self, params, add_start_limit=True):
         """
         Take a dictionary of parameters and convert it into a parameter string.
 
         :params: Dictionary of parameter names and values.
         :return: String representing encoded URL parameters.
         """
-        params.update({
-            'start': self.start,
-            'limit': self.limit,
-        })
+        if add_start_limit:
+            params.update({
+                'start': self.start,
+                'limit': self.limit,
+            })
         string = '&'.join([f'{key}={value}' for key, value in params.items()])
         return '?' + string
 
-    def _get(self, path, params={}):
+    def _get(self, path, params={}, as_json=True, add_start_limit=True):
         """
         GET data from a given endpoint.
 
@@ -47,17 +48,25 @@ class Schoology:
         :return: JSON response.
         """
         response = self.schoology_auth.oauth.get(
-            url=self.api_host + path + self._get_params_string(params),
+            url=self.api_host + path + self._get_params_string(params, add_start_limit),
             headers=self.schoology_auth._request_header(),
             auth=self.schoology_auth.oauth.auth
         )
-        response.raise_for_status()
+
         try:
-            return response.json()
+            response.raise_for_status()
+        except Exception as e:
+            raise f"{e} {response.text}"
+
+        try:
+            if as_json:
+                return response.json()
+            else:
+                return response.text
         except JSONDecodeError:
             raise NoDataError(f'Get request to {response.url} failed: {response.text}')
 
-    def _post(self, path, data, params={}):
+    def _post(self, path, data, params={}, as_json=True):
         """
         POST valid JSON to a given endpoint.
 
@@ -66,18 +75,26 @@ class Schoology:
         :return: JSON response.
         """
         response = self.schoology_auth.oauth.post(
-            url=self.api_host + path + self._get_params_string(params),
+            url=self.api_host + path + self._get_params_string(params, add_start_limit=False),
             json=data,
             headers=self.schoology_auth._request_header(),
             auth=self.schoology_auth.oauth.auth
         )
-        response.raise_for_status()
+        
         try:
-            return response.json()
-        except json.decoder.JSONDecodeError:
-            raise NoDataError(f'Post request to {response.url} failed: {response.text}')
+            response.raise_for_status()
+        except Exception as e:
+            raise f"{e} {response.text}"
 
-    def _put(self, path, data, params={}):
+        try:
+            if as_json:
+                return response.json()
+            else:
+                return response.text
+        except JSONDecodeError:
+            raise NoDataError(f'Get request to {response.url} failed: {response.text}')
+
+    def _put(self, path, data, params={}, as_json=True):
         """
         PUT valid JSON to a given endpoint.
 
@@ -86,16 +103,24 @@ class Schoology:
         :return: JSON response.
         """
         response = self.schoology_auth.oauth.put(
-            url=self.api_host + path + self._get_params_string(params),
+            url=self.api_host + path + self._get_params_string(params, add_start_limit=False),
             json=data,
             headers=self.schoology_auth._request_header(),
             auth=self.schoology_auth.oauth.auth
         )
-        response.raise_for_status()
+        
         try:
-            return response.json()
-        except json.decoder.JSONDecodeError:
-            raise NoDataError(f'Put request to {response.url} failed: {response.text}')
+            response.raise_for_status()
+        except Exception as e:
+            raise f"{e} {response.text}"
+
+        try:
+            if as_json:
+                return response.json()
+            else:
+                return response.text
+        except JSONDecodeError:
+            raise NoDataError(f'Get request to {response.url} failed: {response.text}')
 
     def _delete(self, path):
         """
@@ -108,7 +133,12 @@ class Schoology:
             headers=self.schoology_auth._request_header(),
             auth=self.schoology_auth.oauth.auth
         )
-        response.raise_for_status()
+        
+        try:
+            response.raise_for_status()
+        except Exception as e:
+            raise f"{e} {response.text}"
+
         return response
 
     def get_schools(self):
@@ -2191,3 +2221,12 @@ class Schoology:
         :return: A list of dictionaries representing search outputs.
         """
         return self._search(keywords, 'course')
+
+def csvexport_users(self, fields):
+    """
+    Export a CSV of user data.
+
+    :param fields: Field headers to be returned. Must be one or more of uid, school_uid, building_nid, name_title, name_first, name_first_preferred, name_middle, name_last, role_name, name, mail, position, grad_year, birthday, gender, bio, subjects_taught, grades_taught, phone, address, website, interests, activities
+    :return: CSV string of user data.
+    """
+    return self._get('csvexport/users', {'fields': ','.join(fields)}, add_start_limit=False)
