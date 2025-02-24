@@ -58,7 +58,7 @@ class Schoology:
         try:
             response.raise_for_status()
         except Exception as e:
-            raise f"{e} {response.text}"
+            raise BaseException(f"{e} {response.text}")
 
         try:
             if as_json:
@@ -94,7 +94,7 @@ class Schoology:
             else:
                 return response.text
         except JSONDecodeError:
-            raise NoDataError(f'Get request to {response.url} failed: {response.text}')
+            raise NoDataError(f'Post request to {response.url} failed: {response.text}')
 
     def _put(self, path, data, params={}, as_json=True):
         """
@@ -122,7 +122,7 @@ class Schoology:
             else:
                 return response.text
         except JSONDecodeError:
-            raise NoDataError(f'Get request to {response.url} failed: {response.text}')
+            raise NoDataError(f'Put request to {response.url} failed: {response.text}')
 
     def _delete(self, path):
         """
