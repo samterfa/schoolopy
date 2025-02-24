@@ -3,6 +3,8 @@ from .models import *
 from .authentication import AuthorizationError
 import time
 import json
+# Get BaseException
+from builtins import BaseException
 
 try:
     from json.decoder import JSONDecodeError
@@ -84,7 +86,7 @@ class Schoology:
         try:
             response.raise_for_status()
         except Exception as e:
-            raise f"{e} {response.text}"
+            raise BaseException(f"{e} {response.text}")
 
         try:
             if as_json:
@@ -112,7 +114,7 @@ class Schoology:
         try:
             response.raise_for_status()
         except Exception as e:
-            raise f"{e} {response.text}"
+            raise BaseException(f"{e} {response.text}")
 
         try:
             if as_json:
@@ -137,7 +139,7 @@ class Schoology:
         try:
             response.raise_for_status()
         except Exception as e:
-            raise f"{e} {response.text}"
+            raise BaseException(f"{e} {response.text}")
 
         return response
 
