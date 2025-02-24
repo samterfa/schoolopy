@@ -2231,4 +2231,4 @@ class Schoology:
         :param fields: Field headers to be returned. Must be one or more of uid, school_uid, building_nid, name_title, name_first, name_first_preferred, name_middle, name_last, role_name, name, mail, position, grad_year, birthday, gender, bio, subjects_taught, grades_taught, phone, address, website, interests, activities
         :return: CSV string of user data.
         """
-        return self._get('csvexport/users', {'fields': ','.join(fields)}, add_start_limit=False)
+        return self._get('csvexport/users', {'fields': ','.join(fields)}, as_json=False, add_start_limit=False)
